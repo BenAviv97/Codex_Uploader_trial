@@ -22,6 +22,8 @@ class Config:
 
     # BROKER connection string
     BROKER_URL = os.getenv("BROKER_URL", "amqp://guest:guest@localhost:5672//")
+    CELERY_BROKER_URL: str = BROKER_URL
+    CELERY_RESULT_BACKEND: str = BROKER_URL
 
     # Default upload schedule as a list of HH:MM strings
     DEFAULT_UPLOAD_TIMES: List[str] = os.getenv(

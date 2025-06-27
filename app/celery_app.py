@@ -6,8 +6,8 @@ from config import Config
 
 celery_app = Celery(
     "codex_uploader",
-    broker=Config.REDIS_URL,
-    backend=Config.REDIS_URL,
+    broker=Config.BROKER_URL,
+    backend=Config.BROKER_URL,
 )
 
 # Automatically discover tasks from the "tasks" package
