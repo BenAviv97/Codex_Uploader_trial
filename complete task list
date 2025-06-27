@@ -1,4 +1,3 @@
-
 ## Task List
 
 1. **Task:** Initialize Git repository & scaffold directories
@@ -33,6 +32,7 @@
    **Location:** `/app/__init__.py`
    **Goal:** Initialize Flask, load config, register blueprints.
 
+
 6. **Task:** Configure Celery & Redis
    **Location:** `/app/celery_app.py`
    **Goal:** Instantiate `Celery(app.name, broker=...)`, integrate with Flask.
@@ -41,195 +41,230 @@
    **Location:** `/app/auth.py`
    **Goal:** “Authenticate with Google” endpoint; store/refresh tokens in SQLite or encrypted file.
 
+
 8. **Task:** Build Drive API client helper
    **Location:** `/app/drive_client.py`
-   **Goal:** List/download folders from Drive; handle paging.
+   **Dependencies:** Google OAuth flow (auth.py), google-api-python-client
+   **Goal:** List & download video folders from the specified Drive path; handle paging.
+################################################################
 
-9. **Task:** Write metadata validator
-   **Location:** `/app/validators.py`
-   **Goal:** Check for `.mp4`, thumbnail, valid `metadata.json`, nested structure.
-   **\[Testing Step]**:
+9. **Task:** Write metadata validator tests  
+**Location:** `tests/unit/validators_test.py`  
+**Dependencies:** `pytest`  
+**Goal:**  
+- Define tests for all scenarios: happy path, missing files, bad JSON, schema errors, nested shorts.  
+- Use these tests as a spec to drive the implementation in `app/validators.py`.  
+**[Testing Step]:**  
+1. Run `pytest tests/unit/validators_test.py` and watch failures.  
+2. Implement `validate_folder` until all tests pass (red → green).
 
-   * **Install**: `pip install pytest`
-   * Write a simple test in `/tests/unit/validators_test.py` and run `pytest tests/unit` to confirm your validator catches missing files.
-
-10. **Task:** Pre-flight validation endpoint & UI
-    **Location:**
-
-    * Backend: `/app/views/validation.py`
-    * Frontend: `templates/validation.html`, `static/js/validation.js`
-      **Goal:** Run folder checks, surface pass/fail.
-      **\[Testing Step]**:
-    * **Install**: none extra
-    * Use Flask’s development server (`flask run`), navigate to `/validate`, point at a sample folder, and confirm messages.
+10. **Task:** Implement `validate_folder(path)` in `app/validators.py`  
+**Location:** `/app/validators.py`  
+**Dependencies:** Tests in `tests/unit/validators_test.py`  
+**Goal:** Make all `pytest` assertions pass for the validator scenarios.
 
 11. **Task:** Build project chooser UI
     **Location:**
 
     * Backend: `/app/views/projects.py`
     * Frontend: `templates/projects.html`, `static/js/projects.js`
-      **Goal:** Let user pick the `{project_name}` folder.
+      **Dependencies:** Flask app, Drive client helper
+      **Goal:** Let user pick the `{project_name}` folder from Google Drive.
+################################################################
 
 12. **Task:** Create schedule-picker component
     **Location:**
 
     * Frontend: `templates/scheduler.html`, `static/js/scheduler.js`
-      **Goal:** Override default upload times; send to backend.
+      **Dependencies:** HTML/CSS/JS skills, knowledge of default upload times
+      **Goal:** Allow override of default upload times; send chosen dates to backend.
 
 13. **Task:** Persist schedule & project metadata
     **Location:** `/app/models.py`
-    **Goal:** Save project folder, scheduled dates, metadata.
+    **Dependencies:** Database layer (SQLite or ORM like SQLAlchemy)
+    **Goal:** Save project folder, scheduled dates, and metadata for task creation.
 
 14. **Task:** Write Celery task to enqueue uploads
     **Location:** `/tasks/scheduler.py`
-    **Goal:** At scheduled times, enqueue upload jobs.
-    **\[Testing Step]**:
+    **Dependencies:** Celery, Redis, models.py
+    **Goal:** At scheduled times (Teaser, Main, Shorts…), enqueue individual upload jobs.
+    **\[Testing Step]:**
 
-    * **Install**: Redis locally (e.g. via `brew install redis` or Windows MSI)
-    * Start Redis (`redis-server`) and a Celery worker (`celery -A app.celery_app worker --loglevel=info`), then trigger your scheduler and watch tasks enqueue.
+    * Install & start Redis (`redis-server`)
+    * Run Celery worker:
+
+      ```bash
+      celery -A app.celery_app worker --loglevel=info
+      ```
+    * Trigger the scheduler endpoint and observe tasks enqueued in the worker logs.
 
 15. **Task:** Implement YouTube upload task
     **Location:** `/tasks/youtube.py`
-    **Goal:** Read video/thumbnail/metadata, call YouTube API, record status.
+    **Dependencies:** Celery, google-api-python-client, OAuth tokens, models.py
+    **Goal:** Read video file, thumbnail, metadata; call YouTube Data API v3; update task status.
 
 16. **Task:** Implement TikTok upload task
     **Location:** `/tasks/tiktok.py`
-    **Goal:** Call TikTok API with metadata; handle auth.
+    **Dependencies:** Celery, requests or TikTok SDK, OAuth/config
+    **Goal:** Use TikTok API to upload videos with metadata; handle auth and errors.
 
 17. **Task:** Implement Instagram upload task
     **Location:** `/tasks/instagram.py`
-    **Goal:** Use Instagram Graph API for video posts.
+    **Dependencies:** Celery, requests or Instagram Graph SDK, OAuth/config
+    **Goal:** Post videos via Instagram Graph API; include metadata and thumbnails.
 
 18. **Task:** Expose task-status REST API
     **Location:** `/app/views/status.py`
-    **Goal:** Return JSON of each video’s progress.
+    **Dependencies:** Flask app, models.py or task status store
+    **Goal:** Return JSON of each video’s progress/stage for frontend polling.
 
 19. **Task:** Build status-bar UI widget
     **Location:**
 
     * Frontend: `templates/dashboard.html`, `static/js/status_bar.js`
-      **Goal:** Show real-time progress.
-      **\[Testing Step]**:
-    * No extra installs; after tasks enqueue, hit the status endpoint from the browser console to verify correct JSON and see bars update.
+      **Dependencies:** HTML/CSS/JS, status REST API endpoint
+      **Goal:** Show real-time progress for each video (queued → uploading → done).
+      **\[Testing Step]:**
+    * After enqueuing tasks, open the dashboard in your browser and confirm status bars reflect the JSON from `/status`.
 
 20. **Task:** Enable real-time updates
-    **Location:** `/app/sockets.py` (Flask-SocketIO)
-    **Goal:** Push status from Celery to dashboard.
+    **Location:** `/app/sockets.py` (or integrate Flask-SocketIO)
+    **Dependencies:** Flask-SocketIO, Celery events, socket.io client library
+    **Goal:** Push live status changes from Celery to dashboard without manual refresh.
 
 21. **Task:** Centralize logging & error handling
     **Location:** `/app/logging_config.py`
-    **Goal:** Unified logs, capture retries/failures.
+    **Dependencies:** Python `logging` module, Flask & Celery apps
+    **Goal:** Define uniform logging format for both Flask and Celery; capture API errors and retries.
 
 22. **Task:** Implement API retry logic
     **Location:** `/app/utils/retries.py`
-    **Goal:** Exponential backoff for all external calls.
+    **Dependencies:** `requests` or other HTTP client, `time`/`retrying` logic
+    **Goal:** Wrap external API calls (YouTube, TikTok, etc.) with exponential backoff and rate-limit handling.
 
 23. **Task:** Create Settings UI page
     **Location:**
 
     * Backend: `/app/views/settings.py`
     * Frontend: `templates/settings.html`, `static/js/settings.js`
-      **Goal:** Adjust default upload times, API settings.
+      **Dependencies:** Flask app, models.py, HTML/CSS/JS
+      **Goal:** Let users adjust default upload times, notification thresholds, and API settings.
 
 24. **Task:** Integrate analytics & monitoring
     **Location:** `/app/analytics.py` & dashboard extension
-    **Goal:** Track counts of uploads/failures; show simple charts.
+    **Dependencies:** Database layer (models), charting library (e.g. Chart.js)
+    **Goal:** Track counts of uploads, failures, retries; display simple charts in the UI.
 
 25. **Task:** Configure HTTPS or ngrok support
     **Location:** `config.py`, `/start.sh`, `/start.bat`
-    **Goal:** Secure OAuth callbacks; allow external testing.
+    **Dependencies:** ngrok CLI or local SSL certs, Flask HTTPS config
+    **Goal:** Enable secure OAuth callbacks; allow external webhook testing via ngrok.
 
 26. **Task:** Add internationalization scaffolding
-    **Location:** `/app/i18n.py` + wrap template strings
-    **Goal:** Prep UI for multiple languages.
+    **Location:** `/app/i18n.py`, wrap template strings
+    **Dependencies:** Flask-Babel (or similar)
+    **Goal:** Prepare UI for multiple languages (future “no vo” metadata support).
 
 27. **Task:** Schedule cleanup & maintenance tasks
     **Location:** `/tasks/maintenance.py`
-    **Goal:** Periodically prune old logs, temp files, revoke tokens via Celery Beat.
+    **Dependencies:** Celery Beat scheduler, Redis connection
+    **Goal:** Periodically prune old logs, temp files, and revoke expired tokens.
 
 28. **Task:** Setup Docker Compose
     **Location:** `/docker-compose.yml`
-    **Goal:** Orchestrate Redis, Flask, Celery, ngrok for easy launch.
-    **\[Testing Step]**:
+    **Dependencies:** Docker Desktop, docker-compose
+    **Goal:** Orchestrate Redis, Flask, Celery, and optional ngrok for easy local launch.
+    **\[Testing Step]:**
 
-    * **Install**: Docker Desktop
-    * Run `docker-compose up --build`, confirm all services start and talk to each other (`docker ps`).
+    * Install Docker Desktop
+    * Run `docker-compose up --build` and confirm all services start (`docker ps`).
 
 29. **Task:** Create desktop launcher scripts
     **Location:** `/start.sh`, `/start.bat`
-    **Goal:** Double-click to launch Docker Compose or raw services.
+    **Dependencies:** Docker (if using Compose) or local Redis/Celery/Flask commands
+    **Goal:** Double-click to launch Docker Compose or raw services in the background.
 
 30. **Task:** Configure Continuous Integration
     **Location:** `/.github/workflows/ci.yml`
-    **Goal:** Run linting (`flake8`), unit tests, and build checks on each PR.
-    **\[Testing Step]**:
+    **Dependencies:** GitHub account, repo permissions
+    **Goal:** Run linting (`flake8`), unit tests, and build checks on each push/PR.
+    **\[Testing Step]:**
 
-    * Commit & push your `.github/workflows/ci.yml`, then open a PR to see GitHub Actions run.
+    * Push `ci.yml` to a feature branch, open a PR, and verify GitHub Actions runs successfully.
 
 31. **Task:** Add linting & formatting
     **Location:** `/setup.cfg` or `pyproject.toml`
-    **Goal:** Enforce `flake8`, `black`, plus pre-commit.
-    **\[Testing Step]**:
+    **Dependencies:** `flake8`, `black`, `pre-commit` installed
+    **Goal:** Enforce code style with linters and formatting hooks.
+    **\[Testing Step]:**
 
-    * **Install**: `pip install flake8 black pre-commit`
-    * Run `pre-commit install` then `pre-commit run --all-files`.
+    * Install: `pip install flake8 black pre-commit`
+    * Run `pre-commit install` and then `pre-commit run --all-files`.
 
 32. **Task:** Write unit tests for validators & helpers
     **Location:** `/tests/unit/validators_test.py`, `/tests/unit/drive_client_test.py`
-    **Goal:** Confirm validation and Drive logic.
-    **\[Testing Step]**:
+    **Dependencies:** `pytest`, code under test
+    **Goal:** Ensure metadata validation and Drive client logic work correctly.
+    **\[Testing Step]:**
 
-    * Run `pytest tests/unit`; ensure coverage.
+    * Run `pytest tests/unit` and confirm all tests pass.
 
 33. **Task:** Write Celery task tests
     **Location:** `/tests/tasks/test_scheduler.py`, `/tests/tasks/test_youtube.py`
-    **Goal:** Mock Celery and APIs to verify enqueue & execution.
-    **\[Testing Step]**:
+    **Dependencies:** `pytest`, `pytest-mock`, Celery configured for testing
+    **Goal:** Mock Celery and external APIs to verify tasks enqueue and execute as expected.
+    **\[Testing Step]:**
 
-    * **Install**: `pip install pytest-mock`
-    * Run `pytest tests/tasks`.
+    * Run `pytest tests/tasks` and check for green lights.
 
 34. **Task:** Write integration tests for REST API
     **Location:** `/tests/integration/test_endpoints.py`
-    **Goal:** Use Flask test client to call endpoints and assert JSON.
-    **\[Testing Step]**:
+    **Dependencies:** `pytest`, Flask test client
+    **Goal:** Spin up Flask test client, call endpoints (validation, projects, status), and assert correct JSON.
+    **\[Testing Step]:**
 
     * Run `pytest tests/integration`.
 
 35. **Task:** Write end-to-end UI tests
     **Location:** `/tests/e2e/test_dashboard_flow.py`
-    **Goal:** Automate browser flows via Selenium.
-    **\[Testing Step]**:
+    **Dependencies:** `selenium`, `webdriver-manager`, appropriate WebDriver binary
+    **Goal:** Automate browser interactions to authenticate, pick project, schedule uploads, and view status.
+    **\[Testing Step]:**
 
-    * **Install**: `pip install selenium webdriver-manager`
-    * Download appropriate WebDriver (e.g., ChromeDriver).
+    * Install: `pip install selenium webdriver-manager`
+    * Download ChromeDriver (or compatible)
     * Run `pytest tests/e2e`.
 
 36. **Task:** Write API client mock fixtures
     **Location:** `/tests/conftest.py`, `/tests/mocks/`
-    **Goal:** Reusable mocks for Google Drive, YouTube, etc.
+    **Dependencies:** `pytest`, `pytest-mock`
+    **Goal:** Provide reusable mocked responses for Google Drive, YouTube, TikTok, and Instagram APIs.
 
 37. **Task:** Draft user documentation
     **Location:** `/README.md`, `/docs/`
-    **Goal:** Setup instructions (Git/GitHub, env, install), folder spec, usage, troubleshooting.
+    **Dependencies:** None (Markdown skills)
+    **Goal:** Cover setup (Git/GitHub, env, install), folder structure spec, usage, and troubleshooting.
 
 38. **Task:** Package native executables (optional)
     **Location:** `/packaging/`
-    **Goal:** Use PyInstaller or similar per-OS so end users get a true double-click app.
+    **Dependencies:** PyInstaller
+    **Goal:** Produce OS-specific executables so end users can run the app without installing Docker or Python.
 
 39. **Task:** Add load/performance testing
     **Location:** `/tests/load/test_uploads_load.py`
-    **Goal:** Measure concurrent upload capacity (e.g., with Locust).
-    **\[Testing Step]**:
+    **Dependencies:** Locust (`pip install locust`)
+    **Goal:** Measure concurrent upload capacity and identify bottlenecks.
+    **\[Testing Step]:**
 
-    * **Install**: `pip install locust`
-    * Define simple Locust script, run `locust` and view stats in browser.
+    * Create a simple Locust script, run `locust`, and view performance stats in the browser.
 
 40. **Task:** Implement in-app error reporting
-    **Location:** `/app/error_report.py` & UI hook
-    **Goal:** Let users send stack traces/log snippets back to you for debugging.
+    **Location:** `/app/error_report.py` & relevant UI hooks
+    **Dependencies:** Flask app, SMTP library or HTTP client for sending reports
+    **Goal:** Let users send error details/log snippets from the UI for easier debugging.
 
 41. **Task:** Plan for version migrations
-    **Location:** `/migrations/` (Alembic or simple scripts)
-    **Goal:** Upgrade user settings/tokens between app versions without data loss.
+    **Location:** `/migrations/` (e.g. Alembic)
+    **Dependencies:** Alembic or chosen migration tool, database in use
+    **Goal:** Define a process to upgrade user settings and token storage between app versions without data loss.
 
