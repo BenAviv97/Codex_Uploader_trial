@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Schedule Uploads</title>
+    <script>
+        window.DEFAULT_TIMES = {{ default_times|tojson }};
+    </script>
+    <script src="{{ url_for('static', filename='js/scheduler.js') }}" defer></script>
+</head>
+<body>
+    <h1>Schedule Uploads</h1>
+    <form id="schedule-form">
+        <div id="schedule-list"></div>
+        <button type="submit">Save Schedule</button>
+    </form>
+</body>
+</html>
