@@ -32,3 +32,6 @@ class Config:
     USE_HTTPS: bool = _str_to_bool(os.getenv("USE_HTTPS"))
     SSL_CERT_PATH: Optional[str] = os.getenv("SSL_CERT_PATH")
     SSL_KEY_PATH: Optional[str] = os.getenv("SSL_KEY_PATH")
+
+    # Path on Google Drive containing project folders
+    PROJECTS_DRIVE_PATH: str = os.getenv("PROJECTS_DRIVE_PATH", "projects")
