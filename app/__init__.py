@@ -22,7 +22,7 @@ def create_app(config_class: type[Config] = Config) -> Flask:
     app.config.from_object(config_class)
     # Expose Celery settings for extensions that rely on Flask config
     app.config.setdefault("CELERY_BROKER_URL", config_class.BROKER_URL)
-    app.config.setdefault("CELERY_RESULT_BACKEND", config_class.BROKER_URL)
+    app.config.setdefault("CELERY_RESULT_BACKEND", config_class.CELERY_RESULT_BACKEND)
 
     _register_blueprints(app)
     return app
