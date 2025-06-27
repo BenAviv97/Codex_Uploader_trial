@@ -84,19 +84,28 @@
     **Dependencies:** Database layer (SQLite or ORM like SQLAlchemy)
     **Goal:** Save project folder, scheduled dates, and metadata for task creation.
 
-14. **Task:** Write Celery task to enqueue uploads
-    **Location:** `/tasks/scheduler.py`
-    **Dependencies:** Celery, Redis, models.py
-    **Goal:** At scheduled times (Teaser, Main, Shorts…), enqueue individual upload jobs.
-    **\[Testing Step]:**
-
-    * Install & start Redis (`redis-server`)
-    * Run Celery worker:
-
-      ```bash
-      celery -A app.celery_app worker --loglevel=info
-      ```
-    * Trigger the scheduler endpoint and observe tasks enqueued in the worker logs.
+14. **Task (Updated):** Configure Celery & Flask to use RabbitMQ, and verify scheduler enqueues tasks  
+**Location:**  
+  - `config.py`  
+  - `app/__init__.py`  
+  - `app/celery_app.py`  
+**Dependencies:**  
+  - RabbitMQ server running locally (see Testing Step below)  
+  - `python-dotenv`, `Flask`, `Celery` installed  
+**Goal:**  
+  1. Replace any `REDIS_URL` configs with `BROKER_URL` pointing at `amqp://guest:guest@localhost:5672//`.  
+  2. Update the Flask app factory (Task 5) to expose `CELERY_BROKER_URL` and `CELERY_RESULT_BACKEND` from config.  
+  3. Rewrite the Celery bootstrap (Task 6) to use `BROKER_URL` for both broker & backend.  
+  4. Start Flask, launch a Celery worker, hit your “schedule” endpoint, and confirm tasks show up in the worker logs.
+Use the official MSI from https://www.rabbitmq.com/install-windows.html
+Start RabbitMQ
+In Services panel, start “RabbitMQ”
+Verify it’s running:
+Launch your Flask app:
+Start a Celery worker:
+In its startup logs you should see transport:amqp://guest@localhost:5672//.
+Trigger your scheduler endpoint:
+Observe the Celery logs:
 
 15. **Task:** Implement YouTube upload task
     **Location:** `/tasks/youtube.py`
