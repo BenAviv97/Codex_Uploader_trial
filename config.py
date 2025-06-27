@@ -1,7 +1,12 @@
 from __future__ import annotations
 import os
 from typing import List, Optional
-from dotenv import load_dotenv
+try:
+    from dotenv import load_dotenv  # type: ignore
+except Exception:  # pragma: no cover - optional dependency
+    def load_dotenv(*_args, **_kwargs) -> bool:
+        """Fallback no-op if python-dotenv is not installed."""
+        return False
 
 
 load_dotenv()
