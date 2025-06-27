@@ -60,3 +60,19 @@ def validate_project(base_path: Path) -> List[str]:
 
     walk(base_path)
     return errors
+
+
+def validate_folder(path: Path) -> List[str]:
+    """Validate a single folder containing a video item.
+
+    Returns a list of error messages describing any issues found. If the
+    provided path is not a directory, a corresponding error is returned.
+    """
+
+    errors: List[str] = []
+    if not path.is_dir():
+        errors.append(f"{path} is not a directory")
+        return errors
+
+    _validate_item(path, errors)
+    return errors
