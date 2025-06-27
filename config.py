@@ -13,6 +13,9 @@ def _str_to_bool(value: Optional[str], default: bool = False) -> bool:
     return value.lower() in {"1", "true", "yes", "y", "on"}
 
 
+CELERY_RESULT_BACKEND = "rpc://"
+
+
 class Config:
     """Application configuration loaded from environment variables."""
 
@@ -23,7 +26,7 @@ class Config:
     # BROKER connection string
     BROKER_URL = os.getenv("BROKER_URL", "amqp://guest:guest@localhost:5672//")
     CELERY_BROKER_URL: str = BROKER_URL
-    CELERY_RESULT_BACKEND: str = BROKER_URL
+    CELERY_RESULT_BACKEND: str = CELERY_RESULT_BACKEND
 
     # Default upload schedule as a list of HH:MM strings
     DEFAULT_UPLOAD_TIMES: List[str] = os.getenv(
