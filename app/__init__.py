@@ -3,7 +3,11 @@ from __future__ import annotations
 import importlib
 import os
 import pkgutil
-from flask import Flask, Blueprint
+try:  # Allow importing this module without Flask installed
+    from flask import Flask, Blueprint
+except Exception:  # pragma: no cover - used only in minimal test envs
+    Flask = object  # type: ignore
+    Blueprint = object  # type: ignore
 from config import Config
 
 
