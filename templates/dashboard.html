@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Upload Dashboard</title>
+    <style>
+        .status-item { margin-bottom: 1em; }
+        .status-bar { border: 1px solid #ccc; width: 300px; height: 20px; position: relative; }
+        .status-bar .progress { background: #4caf50; height: 100%; width: 0; color: #fff; text-align: center; line-height: 20px; transition: width 0.5s; }
+        .status-bar.failed .progress { background: #d9534f; }
+    </style>
+    <script src="{{ url_for('static', filename='js/status_bar.js') }}" defer></script>
+</head>
+<body>
+    <h1>Upload Status</h1>
+    <div id="status-container"></div>
+</body>
+</html>
