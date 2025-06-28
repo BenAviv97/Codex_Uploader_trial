@@ -128,3 +128,29 @@ def get_schedules(project_id: int) -> List[Dict[str, Any]]:
             item["metadata"] = json.loads(item["metadata"])
         schedules.append(item)
     return schedules
+
+
+def update_schedule_status(schedule_id: int, status: str) -> None:
+    """Update the status field inside the schedule metadata."""
+    init_db()
+    conn = _get_conn()
+    try:
+        cur = conn.execute(
+            "SELECT metadata FROM schedules WHERE id = ?",
+            (schedule_id,),
+        )
+        row = cur.fetchone()
+        meta = {}
+        if row and row[0]:
+            try:
+                meta = json.loads(row[0])
+            except json.JSONDecodeError:
+                meta = {}
+        meta["status"] = status
+        conn.execute(
+            "UPDATE schedules SET metadata = ? WHERE id = ?",
+            (json.dumps(meta), schedule_id),
+        )
+        conn.commit()
+    finally:
+        conn.close()
