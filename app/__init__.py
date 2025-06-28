@@ -50,7 +50,8 @@ def _register_blueprints(app: Flask) -> None:
                 mod = importlib.import_module(f"app.views.{name}")
             except ImportError:
                 continue
-            for attr in ("bp", "blueprint", f"{name}_bp"):
+            # Also look for a module-specific blueprint name like ``index_bp``
+            for attr in ("bp", "blueprint", f"{name}_bp", "index_bp"):
                 blueprint = getattr(mod, attr, None)
                 if isinstance(blueprint, Blueprint):
                     app.register_blueprint(blueprint)

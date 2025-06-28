@@ -109,7 +109,7 @@ def oauth2_callback() -> redirect:
     flow.fetch_token(authorization_response=request.url)
     creds = flow.credentials
     _store_credentials(creds)
-    return redirect(url_for("index"))
+    return redirect(url_for("index.index"))
 
 
 def get_credentials() -> Optional[Credentials]:
