@@ -154,3 +154,36 @@ def update_schedule_status(schedule_id: int, status: str) -> None:
         conn.commit()
     finally:
         conn.close()
+
+
+def get_all_statuses() -> List[Dict[str, Any]]:
+    """Return status information for all schedules."""
+    init_db()
+    conn = _get_conn()
+    try:
+        cur = conn.execute(
+            "SELECT id, project_id, scheduled_at, metadata FROM schedules"
+        )
+        rows = cur.fetchall()
+    finally:
+        conn.close()
+
+    results: List[Dict[str, Any]] = []
+    for row in rows:
+        meta = {}
+        if row["metadata"]:
+            try:
+                meta = json.loads(row["metadata"])
+            except json.JSONDecodeError:
+                meta = {}
+        status = meta.get("status", "queued")
+        results.append(
+            {
+                "id": row["id"],
+                "project_id": row["project_id"],
+                "scheduled_at": row["scheduled_at"],
+                "status": status,
+            }
+        )
+
+    return results
